@@ -1,0 +1,60 @@
+from tkinter import *
+from tkinter import ttk, messagebox
+
+import numpy as np
+import pandas as pd
+import openpyxl as xl
+
+class CalculadoraLucro():
+    def __init__(self):
+        self.root = Tk()
+        self.root.title("Quitanda do José")
+        self.root.geometry("1100x650")
+        self.root.resizable(False, False)
+
+        self.color_green = "#2ca063"
+        self.color_yellow = "#e6a04b"
+        self.color_white = "#f8f8f8"
+
+        self.containers()
+        self.itens_container01()
+        self.root.mainloop()
+
+    def containers(self):
+        self.fr_container01 = Frame(
+            self.root,
+            width=1050,
+            height=30,
+            bg='blue'
+        )
+        self.fr_container02 = Frame(
+            self.root,
+            width=1050,
+            height=250,
+            bg='yellow'
+        )
+        self.fr_container03 = Frame(
+            self.root,
+            width=1100,
+            height=370,
+            bg=self.color_green
+        )
+
+        self.fr_container01.propagate(0)
+        self.fr_container02.propagate(0)
+        self.fr_container03.propagate(0)
+        self.fr_container01.pack()
+        self.fr_container02.pack()
+        self.fr_container03.pack()
+
+    def itens_container01(self):
+        self.lb_title = Label(
+            self.fr_container01,
+            text='Calculadora de Lucros',
+            font='Verdana 20',
+            bg= self.fr_container01.cget('bg')
+        )
+
+        self.lb_title.pack()
+
+CalculadoraLucro()
