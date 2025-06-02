@@ -18,6 +18,7 @@ class CalculadoraLucro():
 
         self.containers()
         self.itens_container01()
+        self.itens_container02()
         self.root.mainloop()
 
     def containers(self):
@@ -25,13 +26,13 @@ class CalculadoraLucro():
             self.root,
             width=1050,
             height=30,
-            bg='blue'
+            bg='white'
         )
         self.fr_container02 = Frame(
             self.root,
             width=1050,
             height=250,
-            bg='yellow'
+            bg='white'
         )
         self.fr_container03 = Frame(
             self.root,
@@ -52,9 +53,186 @@ class CalculadoraLucro():
             self.fr_container01,
             text='Calculadora de Lucros',
             font='Verdana 20',
-            bg= self.fr_container01.cget('bg')
+            bg=self.fr_container01.cget('bg')
+        )
+        self.lb_title.pack()
+
+    def itens_container02(self):
+        self.fr_subcontainer01 = Frame(
+            self.fr_container02,
+            bg='white',
+            highlightthickness=1,
+            highlightcolor='gray'
+        )
+        self.fr_subcontainer02 = Frame(
+            self.fr_container02,
+            bg='white',
+            highlightthickness=1,
+            highlightcolor='gray'
+        )
+        self.fr_subcontainer03 = Frame(
+            self.fr_container02,
+            bg='white',
+            highlightthickness=1,
+            highlightcolor='gray'
         )
 
-        self.lb_title.pack()
+        self.fr_container_btn = Frame(
+            self.fr_subcontainer01,
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+
+        self.lb_title_section01 = Label(
+            self.fr_subcontainer01,
+            text='Cadastro de produto',
+            font='Verdana 15',
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+
+        # Nome do produto
+        self.lb_nome_produto = Label(
+            self.fr_subcontainer01,
+            text='Nome do produto',
+            font='Verdana',
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+        self.en_nome_produto = Entry(
+            self.fr_subcontainer01,
+            font='Verdana',
+            highlightthickness=1,
+            highlightbackground='gray',
+            highlightcolor=self.color_green,
+            bg='white'
+        )
+
+        # Quantidade do produto
+        self.lb_qtd_produto = Label(
+            self.fr_subcontainer01,
+            text='Quantidade do produto',
+            font='Verdana',
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+        self.en_qtd_produto = Entry(
+            self.fr_subcontainer01,
+            font='Verdana',
+            highlightthickness=1,
+            highlightbackground='gray',
+            highlightcolor=self.color_green,
+            bg='white'
+        )
+
+        # Preço de compra
+        self.lb_preco_compra = Label(
+            self.fr_subcontainer01,
+            text='Preço de compra',
+            font='Verdana',
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+        self.en_preco_compra = Entry(
+            self.fr_subcontainer01,
+            font='Verdana',
+            highlightthickness=1,
+            highlightbackground='gray',
+            highlightcolor=self.color_green,
+            bg='white'
+        )
+
+        # Preço de venda
+        self.lb_preco_venda = Label(
+            self.fr_subcontainer01,
+            text='Preço de venda',
+            font='Verdana',
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+        self.en_preco_venda = Entry(
+            self.fr_subcontainer01,
+            font='Verdana',
+            highlightthickness=1,
+            highlightbackground='gray',
+            highlightcolor=self.color_green,
+            bg='white'
+        )
+
+        # Custo frete
+        self.lb_custo_frete = Label(
+            self.fr_subcontainer01,
+            text='Custo frete',
+            font='Verdana',
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+        self.en_custo_frete = Entry(
+            self.fr_subcontainer01,
+            font='Verdana',
+            highlightthickness=1,
+            highlightbackground='gray',
+            highlightcolor=self.color_green,
+            bg='white'
+        )
+
+        # Custo adicional
+        self.lb_custo_adicional = Label(
+            self.fr_subcontainer01,
+            text='Custo adicional',
+            font='Verdana',
+            bg=self.fr_subcontainer01.cget('bg')
+        )
+        self.en_custo_adicional = Entry(
+            self.fr_subcontainer01,
+            font='Verdana',
+            highlightthickness=1,
+            highlightbackground='gray',
+            highlightcolor=self.color_green,
+            bg='white'
+        )
+
+        # Botões
+        self.btn_calcular = Button(
+            self.fr_container_btn,
+            text='Calcular',
+            fg='white',
+            bg='#0097b2',
+            command=lambda: None  # Pode colocar sua função aqui
+        )
+
+        self.btn_salvar = Button(
+            self.fr_container_btn,
+            text='Salvar',
+            fg='white',
+            bg=self.color_green,
+            command=lambda: None
+        )
+
+        self.btn_deletar = Button(
+            self.fr_container_btn,
+            text='Deletar',
+            fg='white',
+            bg='#ff3131',
+            command=lambda: None
+        )
+
+        # Alocando os containers
+        self.fr_subcontainer01.grid(row=0, column=0, padx=10, pady=7, sticky=N)
+        self.fr_subcontainer02.grid(row=0, column=1, padx=10, pady=7, sticky=N)
+        self.fr_subcontainer03.grid(row=0, column=2, padx=10, pady=7, sticky=N)
+
+        # Posicionando elementos
+        self.lb_title_section01.grid(row=0, columnspan=2, pady=10)
+        self.lb_nome_produto.grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        self.en_nome_produto.grid(row=1, column=1, sticky=W, padx=5)
+        self.lb_qtd_produto.grid(row=2, column=0, sticky=W, padx=5, pady=5)
+        self.en_qtd_produto.grid(row=2, column=1, sticky=W, padx=5)
+        self.lb_preco_compra.grid(row=3, column=0, sticky=W, padx=5, pady=5)
+        self.en_preco_compra.grid(row=3, column=1, sticky=W, padx=5)
+        self.lb_preco_venda.grid(row=4, column=0, sticky=W, padx=5, pady=5)
+        self.en_preco_venda.grid(row=4, column=1, sticky=W, padx=5)
+        self.lb_custo_frete.grid(row=5, column=0, sticky=W, padx=5, pady=5)
+        self.en_custo_frete.grid(row=5, column=1, sticky=W, padx=5)
+        self.lb_custo_adicional.grid(row=6, column=0, sticky=W, padx=5, pady=5)
+        self.en_custo_adicional.grid(row=6, column=1, sticky=W, padx=5)
+
+        self.fr_container_btn.grid(row=7, columnspan=2, padx=10, sticky=W)
+        self.btn_calcular.grid(row=0, column=0, sticky=W, padx=5)
+        self.btn_salvar.grid(row=0, column=1, sticky=W, padx=5)
+        self.btn_deletar.grid(row=0, column=2, sticky=W, padx=5)
 
 CalculadoraLucro()
