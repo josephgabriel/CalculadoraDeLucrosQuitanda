@@ -201,7 +201,8 @@ class CalculadoraLucro():
             text='Salvar',
             fg='white',
             bg=self.color_green,
-            command=lambda: None
+            font = 'Verdana',
+            command=self.salvar_registro
         )
 
         self.btn_deletar = Button(
@@ -308,17 +309,32 @@ class CalculadoraLucro():
         ]
 
         self.treeview = ttk.Treeview(
-            self.fr_container03,
-            columns=colunas_tabela,
-            show='headings'
-        )
+        self.fr_container03,
+        columns=colunas_tabela,
+        show='headings'
+    )
 
         for col in colunas_tabela:
-            self.treeview.heading(col, text=col.title())
+         self.treeview.heading(col, text=col)
+         self.treeview.column(col, width=150, anchor=CENTER)
+
+        # Scrollbar horizontal
+        h_scroll = Scrollbar(self.fr_container03, orient=HORIZONTAL, command=self.treeview.xview)
+        self.treeview.configure(xscrollcommand=h_scroll.set)
+        
+        # Scrollbar vertical
+        v_scroll = Scrollbar(self.fr_container03, orient=VERTICAL, command=self.treeview.yview)
+        self.treeview.configure(yscrollcommand=v_scroll.set)
+
+        # Posicionando a Treeview e as barras de rolagem
+        self.treeview.grid(row=0, column=0, sticky='nsew')
+        h_scroll.grid(row=1, column=0, sticky='ew')
+        v_scroll.grid(row=0, column=1, sticky='ns')
+
+        self.fr_container03.grid_rowconfigure(0, weight=1)
+        self.fr_container03.grid_columnconfigure(0, weight=1)
 
         self.atualizar_tabela()
-
-        self.treeview.pack(fill='both', expand=True, padx=10, pady=10)
 
     # função para atualizar a tabela quando houver alterações
     def atualizar_tabela(self):
@@ -340,5 +356,71 @@ class CalculadoraLucro():
             dados.append(row)
 
         return dados
+    #Função para salvar dados na planilha
+    def salvar_registro(self):
+        if self.valiar_entrys() == True:
+            nome_produto = self.en_nome_produto.get()
+            qtd_produto = float(self.en_qtd_produto.get())
+            preco_venda = float(self.en_preco_venda.get())
+            preco_compra = float(self.en_preco_compra.get())
+            custo_adicional = float(self.en_custo_adicional.get())
+            custo_frete = float(self.en_custo_frete.get())
 
+            lucro_liquido = preco_venda - preco_compra - custo_adicional - custo_frete
+
+            custo_geral = (preco_compra+ custo_adicional + custo_frete) * qtd_produto
+
+            margem_lucro = (lucro_liquido/preco_venda) * 100
+           #Carregar planilha existente ou criar uma nova
+            try:
+                wb = xl.load_workbook('planilha.xlsx')
+                sheet = wb.active
+            except:
+                wb = xl.Workbook()
+                sheet = wb.active
+                sheet.title('Plan1')
+
+            #Adicionando cabeçalhos
+                sheet['A1'] = 'Nome do produto'
+                sheet['B1'] = 'Preco da compra'
+                sheet['C1'] = 'Preco da venda'
+                sheet['D1'] = 'Quantidade'
+                sheet['E1'] = 'Custos Adicionais'
+                sheet['F1'] = 'Custo do Frete'
+                sheet['G1'] = 'Custo Total'
+                sheet['H1'] = 'Lucro Liquido'
+                sheet['I1'] = 'Margem de Lucro (%)'
+
+            #Adicionando valores na minha planilha
+            row = sheet.max_row + 1
+            sheet['A{}', format(row)] = nome_produto
+            sheet['B{}', format(row)] = preco_compra
+            sheet['C{}', format(row)] = preco_venda
+            sheet['D{}', format(row)] = qtd_produto
+            sheet['E{}', format(row)] = custo_adicional
+            sheet['F{}', format(row)] = custo_frete
+            sheet['G{}', format(row)] = custo_geral
+            sheet['H{}', format(row)] = lucro_liquido
+            sheet['I{}', format(row)] = margem_lucro
+
+            wb.save('planilha.xlsx')
+            self.atualizar_tabela()
+
+        else:
+            messagebox.showinfo('Campo vazio, existe algum campo obrigatorio vazio!')
+
+    def valiar_entrys(self):
+        campos = [
+            self.en_nome_produto.get(),
+            self.en_qtd_produto.get(),
+            self.en_preco_compra.get(),
+            self.en_nome_produto.get(),
+            self.en_custo_adicional.get(),
+            self.en_custo_frete.get()
+        ]
+        if all(campo.strip() for campo in campos):
+            return True
+        else: 
+            return False
+        #quero que todos os itens atribuidos dentro de campo tiver algum vazio me retorne false, caso ao contario retorne true.
 CalculadoraLucro()
