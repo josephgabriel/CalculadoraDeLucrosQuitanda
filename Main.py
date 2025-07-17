@@ -4,15 +4,18 @@ from tkinter import ttk, messagebox
 import numpy as np
 import pandas as pd
 import openpyxl as xl
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 
 class CalculadoraLucro():
     def __init__(self):
         self.root = Tk()
         self.root.title("Quitanda do José")
-        self.root.geometry("1100x650")
+        self.root.geometry("1100x600")
         self.root.resizable(False, False)
 
         self.color_green = "#2ca063"
+        self.color_greendois = "#0aaf57"
         self.color_yellow = "#e6a04b"
         self.color_white = "#f8f8f8"
 
@@ -25,21 +28,27 @@ class CalculadoraLucro():
     def containers(self):
         self.fr_container01 = Frame(
             self.root,
-            width=1050,
+            width=1200,
             height=30,
-            bg='white'
+            bg=self.color_greendois,
+            bd=2,
+            relief='solid'
         )
         self.fr_container02 = Frame(
             self.root,
             width=1050,
-            height=250,
-            bg='white'
+            height=1000,
+            bg=self.color_green,
+            bd=2,
+            relief='solid'
         )
         self.fr_container03 = Frame(
             self.root,
             width=1100,
             height=370,
-            bg=self.color_green
+            bg='red',
+            bd=2,
+            relief='solid'
         )
 
         self.fr_container01.propagate(0)
@@ -193,7 +202,8 @@ class CalculadoraLucro():
             text='Calcular',
             fg='white',
             bg='#0097b2',
-            command=lambda: None
+            font='Verdana',
+            command=self.calcular
         )
 
         self.btn_salvar = Button(
@@ -210,7 +220,7 @@ class CalculadoraLucro():
             text='Deletar',
             fg='white',
             bg='#ff3131',
-            command=lambda: None
+            command=self.excluir_registro
         )
 
         # secao 02
@@ -301,43 +311,53 @@ class CalculadoraLucro():
         self.lb_title_margem_lucro.grid(row=4, column=0)
         self.lb_resultado_margem_lucro.grid(row=5, column=0, padx=5, pady=(0, 60))
 
+        self.grafico()
+        
     def itens_container03(self):
-        colunas_tabela = [
-            'Nome do Produto', 'Preço de Compra(R$)', 'Preco de Venda(R$)', 'Qtd',
-            'Custos adicionais(R$)', 'Custo médio do frete(R$)', 'Custo total(R$)',
-            'Lucro Liquido(R$)', 'Margem de Lucro(%)'
-        ]
+       colunas_tabela = [
+        'Nome do Produto', 'Preço de Compra(R$)', 'Preco de Venda(R$)', 'Qtd',
+        'Custos adicionais(R$)', 'Custo médio do frete(R$)', 'Custo total(R$)',
+        'Lucro Liquido(R$)', 'Margem de Lucro(%)'
+    ]
 
-        self.treeview = ttk.Treeview(
-        self.fr_container03,
-        columns=colunas_tabela,
-        show='headings'
+    # Frame interno para organizar a Treeview com scrollbars
+       frame_tabela = Frame(self.fr_container03)
+       frame_tabela.pack(fill=BOTH, expand=True)
+
+    # Scrollbars criadas no MESMO container da treeview
+       v_scroll = Scrollbar(frame_tabela, orient=VERTICAL)
+       h_scroll = Scrollbar(frame_tabela, orient=HORIZONTAL)
+
+       self.treeview = ttk.Treeview(
+          frame_tabela,
+          columns=colunas_tabela,
+          show='headings',
+          yscrollcommand=v_scroll.set,
+          xscrollcommand=h_scroll.set
     )
 
-        for col in colunas_tabela:
-         self.treeview.heading(col, text=col)
-         self.treeview.column(col, width=150, anchor=CENTER)
+       for col in colunas_tabela:
+           self.treeview.heading(col, text=col)
+           self.treeview.column(col, width=180, anchor=CENTER)
 
-        # Scrollbar horizontal
-        h_scroll = Scrollbar(self.fr_container03, orient=HORIZONTAL, command=self.treeview.xview)
-        self.treeview.configure(xscrollcommand=h_scroll.set)
-        
-        # Scrollbar vertical
-        v_scroll = Scrollbar(self.fr_container03, orient=VERTICAL, command=self.treeview.yview)
-        self.treeview.configure(yscrollcommand=v_scroll.set)
+    # Configura scrolls
+       v_scroll.config(command=self.treeview.yview)
+       h_scroll.config(command=self.treeview.xview)
 
-        # Posicionando a Treeview e as barras de rolagem
-        self.treeview.grid(row=0, column=0, sticky='nsew')
-        h_scroll.grid(row=1, column=0, sticky='ew')
-        v_scroll.grid(row=0, column=1, sticky='ns')
+    # Posicionamento via grid
+       self.treeview.grid(row=0, column=0, sticky='nsew')
+       v_scroll.grid(row=0, column=1, sticky='ns')
+       h_scroll.grid(row=1, column=0, sticky='ew')
 
-        self.fr_container03.grid_rowconfigure(0, weight=1)
-        self.fr_container03.grid_columnconfigure(0, weight=1)
+    # Expansão automática
+       frame_tabela.grid_rowconfigure(0, weight=1)
+       frame_tabela.grid_columnconfigure(0, weight=1)
 
-        self.atualizar_tabela()
+       self.atualizar_tabela()
 
     # função para atualizar a tabela quando houver alterações
     def atualizar_tabela(self):
+        self.grafico()
         df_list = self.obter_dados_tabela('planilha.xlsx')
 
         for i in self.treeview.get_children():
@@ -345,6 +365,7 @@ class CalculadoraLucro():
 
         for item in df_list:
             self.treeview.insert('', 'end', values=item)
+        self.grafico()
 
     def obter_dados_tabela(self, nome_planilha):
         wb = xl.load_workbook(nome_planilha)
@@ -393,28 +414,78 @@ class CalculadoraLucro():
 
             #Adicionando valores na minha planilha
             row = sheet.max_row + 1
-            sheet['A{}', format(row)] = nome_produto
-            sheet['B{}', format(row)] = preco_compra
-            sheet['C{}', format(row)] = preco_venda
-            sheet['D{}', format(row)] = qtd_produto
-            sheet['E{}', format(row)] = custo_adicional
-            sheet['F{}', format(row)] = custo_frete
-            sheet['G{}', format(row)] = custo_geral
-            sheet['H{}', format(row)] = lucro_liquido
-            sheet['I{}', format(row)] = margem_lucro
+            sheet[f'A{row}'] = nome_produto
+            sheet[f'B{row}'] = preco_compra
+            sheet[f'C{row}'] = preco_venda
+            sheet[f'D{row}'] = qtd_produto
+            sheet[f'E{row}'] = custo_adicional
+            sheet[f'F{row}'] = custo_frete
+            sheet[f'G{row}'] = custo_geral
+            sheet[f'H{row}'] = lucro_liquido
+            sheet[f'I{row}'] = margem_lucro
+
 
             wb.save('planilha.xlsx')
             self.atualizar_tabela()
+            self.resetar_entrys()
 
         else:
             messagebox.showinfo('Campo vazio, existe algum campo obrigatorio vazio!')
+
+    #Calcular registros
+    def calcular(self):
+        if self.valiar_entrys() == True:
+             if self.valiar_entrys() == True:
+                nome_produto = self.en_nome_produto.get()
+                qtd_produto = float(self.en_qtd_produto.get())
+                preco_venda = float(self.en_preco_venda.get())
+                preco_compra = float(self.en_preco_compra.get())
+                custo_adicional = float(self.en_custo_adicional.get())
+                custo_frete = float(self.en_custo_frete.get())
+
+                custo_geral = (preco_compra * qtd_produto) + custo_adicional + custo_frete
+                lucro_liquido = preco_venda - custo_geral
+                margem_lucro = (lucro_liquido / preco_venda) * 100
+
+                self.lb_texto_resultado_operacao['text'] = 'O lucro do produto {} é de R${:.2f} e a margem de lucro é de {:.2f}%'.format(nome_produto, lucro_liquido, margem_lucro)
+
+                self.lb_resultado_lucro_liquido['text'] = 'R${:.2f}'.format(lucro_liquido)
+                self.lb_resultado_margem_lucro['text'] = 'R${:.2f}%'.format(margem_lucro)
+
+        else: 
+            messagebox.showinfo('Campo vazio, existe algum campo obrigatorio vazio!')
+
+    def excluir_registro(self):
+        try:
+            dado_selecionado = self.treeview.focus()
+            treev_dicionario = self.treeview.item(dado_selecionado)
+            treev_lista = treev_dicionario['values']
+            valor = treev_lista[0]
+
+            wb = xl.load_workbook('planilha.xlsx')
+            sheet = wb.active
+            contador = 2
+
+            for row in sheet.iter_rows(min_row = 2, min_col = 1, max_col = 1, values_only = True):
+                if str(row[0]) == valor:
+                    linha = contador
+                    sheet.delete_rows(linha)
+                    messagebox.showinfo('Exclusão', f'{valor} foi deletado com sucesso!')
+                    break
+
+                contador += 1
+
+            wb.save('planilha.xlsx')
+            self.atualizar_tabela()
+        except: 
+            messagebox.showinfo('Campos vazios',f'Selecione um produto para deletar')
 
     def valiar_entrys(self):
         campos = [
             self.en_nome_produto.get(),
             self.en_qtd_produto.get(),
             self.en_preco_compra.get(),
-            self.en_nome_produto.get(),
+            self.en_preco_venda.get(),
             self.en_custo_adicional.get(),
             self.en_custo_frete.get()
         ]
@@ -423,4 +494,89 @@ class CalculadoraLucro():
         else: 
             return False
         #quero que todos os itens atribuidos dentro de campo tiver algum vazio me retorne false, caso ao contario retorne true.
+
+    def resetar_entrys(self):
+        self.en_nome_produto.delete(0, 'end'),
+        self.en_qtd_produto.delete(0, 'end'),
+        self.en_preco_compra.delete(0, 'end'),
+        self.en_preco_venda.delete(0, 'end'),
+        self.en_custo_adicional.delete(0, 'end'),
+        self.en_custo_frete.delete(0, 'end'),
+
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    import matplotlib.pyplot as plt
+
+    def grafico(self):
+        self.lib_title_section03 = Label(
+            self.fr_subcontainer03,
+            text='Estatistica dos produtos salvos',
+            font='Verdana 15',
+            bg=self.fr_subcontainer03.cget('bg')
+        )
+
+        lista_nomes = ['Total custos', 'Lucro liquido total', 'margem de lucro total']
+        lista_valores = self.estatistica()
+        simbol = ['R$', 'R$', '%']
+
+        figura = plt.Figure(figsize=(4.5, 3.3), dpi=70)
+        ax = figura.add_subplot(111)
+
+        ax.bar(
+            lista_nomes,
+            lista_valores,
+            color = self.color_green,
+            width = 0.5
+        )
+
+        c = 0
+        for i in ax.patches:
+            if c == 2:
+                ax.text(i.get_x()-.001, i.get_height()+.5, str("{:,.0f}".format(lista_valores[c]) +simbol[c]), fontsize = 17, fontstyle = 'italic', verticalalignment = 'bottom', color='dimgray')
+            else:
+               ax.text(i.get_x()-.001, i.get_height()+.5, str(simbol[c]+"{:,.0f}".format(lista_valores[c])),fontsize = 17, fontstyle = 'italic', verticalalignment = 'bottom', color='dimgray')
+            c += 1
+
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+
+        canva = FigureCanvasTkAgg(
+            figura,
+            self.fr_subcontainer03
+        )
+
+        self.lib_title_section03.grid(row=0, column=0, pady=(5,5))
+        canva.get_tk_widget().grid(row=1, column=0, pady=(5,80))
+
+
+    def estatistica(self):
+        wb = xl.load_workbook('planilha.xlsx')
+        sheet = wb.active
+
+        primeira_linha = 2
+        ultima_linha = sheet.max_row
+
+        custo_total = 0
+        lucro_total = 0
+
+        for linha in range(primeira_linha, ultima_linha + 1):
+            custo_total += sheet.cell(row=linha, column=7).value or 0
+            lucro_total += sheet.cell(row=linha, column=8).value or 0
+
+        preco_venda_total = sum(
+            sheet.cell(row=linha, column=3).value or 0
+            for linha in range(primeira_linha, ultima_linha + 1)
+    )
+
+        try:
+            margem_lucro_total = (lucro_total / preco_venda_total) * 100
+        except ZeroDivisionError:
+            margem_lucro_total = 0
+
+        custo_total = round(custo_total, 2)
+        lucro_total = round(lucro_total, 2)
+        margem_lucro_total = round(margem_lucro_total, 2)
+
+        return [custo_total, lucro_total, margem_lucro_total]
+
 CalculadoraLucro()
